@@ -1,0 +1,18 @@
+Python Developer
+
+Required Skills:
+Python
+Machine Learning
+Pandas
+NumPy
+SQL
+Git
+
+Preferred Skills:
+LangChain
+LLM
+AI
+Vector Database
+
+Responsibilities:
+Build AI applications and data-driven solutions.
