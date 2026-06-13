@@ -1,72 +1,121 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Resume Selector AI</title>
+    <title>AI Resume Screening System</title>
+
     <style>
-        body {
-            font-family: Arial;
-            margin: 40px;
-            background: #f4f4f4;
+        body{
+            font-family: Arial, sans-serif;
+            background:#f4f4f4;
+            padding:40px;
         }
 
-        .box {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            width: 60%;
+        .container{
+            max-width:800px;
+            margin:auto;
+            background:white;
+            padding:25px;
+            border-radius:10px;
+            box-shadow:0 0 10px rgba(0,0,0,0.1);
         }
 
-        textarea {
-            width: 100%;
-            height: 150px;
+        h1{
+            text-align:center;
         }
 
-        button {
-            padding: 10px 20px;
-            background: green;
-            color: white;
-            border: none;
-            margin-top: 10px;
-            cursor: pointer;
+        textarea{
+            width:100%;
+            height:180px;
+            padding:10px;
+            font-size:16px;
         }
 
-        .result {
-            margin-top: 20px;
+        button{
+            margin-top:15px;
+            padding:10px 20px;
+            font-size:16px;
+            background:green;
+            color:white;
+            border:none;
+            cursor:pointer;
+        }
+
+        button:hover{
+            background:darkgreen;
+        }
+
+        .result{
+            margin-top:20px;
+            padding:15px;
+            background:#e8f5e9;
+            border-radius:8px;
+        }
+
+        .error{
+            margin-top:20px;
+            padding:15px;
+            background:#ffebee;
+            color:red;
+            border-radius:8px;
+        }
+
+        ul{
+            padding-left:20px;
         }
     </style>
 </head>
 
 <body>
 
-<div class="box">
+<div class="container">
 
-    <h2>AI Resume Screening System</h2>
+    <h1>AI Resume Screening System</h1>
 
     <form action="/analyze" method="POST">
 
-        <label>Job Description:</label><br>
-        <textarea name="job_description" required></textarea><br>
+        <label><b>Enter Job Description:</b></label>
+        <br><br>
+
+        <textarea name="job_description" required>{{ job_description }}</textarea>
+
+        <br>
 
         <button type="submit">Analyze Resumes</button>
 
     </form>
 
+    {% if error %}
+    <div class="error">
+        <b>Error:</b> {{ error }}
+    </div>
+    {% endif %}
+
     {% if best_resume %}
-
     <div class="result">
-        <h3>Results</h3>
 
-        <p><b>Best Resume:</b> {{ best_resume }}</p>
-        <p><b>Score:</b> {{ best_score }}</p>
+        <h2>Best Matching Resume</h2>
 
-        <h4>All Scores:</h4>
+        <p>
+            <b>Resume:</b>
+            {{ best_resume }}
+        </p>
+
+        <p>
+            <b>Score:</b>
+            {{ best_score }}
+        </p>
+
+        <h3>All Resume Scores</h3>
+
         <ul>
             {% for file, score in results %}
-                <li>{{ file }} → {{ score }}</li>
+            <li>
+                {{ file }} → {{ score }}
+            </li>
             {% endfor %}
         </ul>
-    </div>
 
+    </div>
     {% endif %}
 
 </div>

@@ -6,53 +6,74 @@ app = Flask(__name__)
 
 @app.route("/")
 def home():
-    return render_template("index.html")
+    return render_template(
+        "index.html",
+        best_resume=None,
+        best_score=None,
+        results=[],
+        job_description=""
+    )
 
 
 @app.route("/analyze", methods=["POST"])
 def analyze():
 
-    job_desc = request.form["job_description"].lower()
+    try:
+        job_desc = request.form.get("job_description", "").strip()
 
-    resume_folder = "resumes"
+        if not job_desc:
+            return render_template(
+                "index.html",
+                error="Please enter a Job Description",
+                job_description=""
+            )
 
-    best_resume = None
-    best_score = 0
-    results = []
+        resume_folder = "resumes"
 
-    jd_words = set(job_desc.split())
+        if not os.path.exists(resume_folder):
+            return render_template(
+                "index.html",
+                error="resumes folder not found!",
+                job_description=job_desc
+            )
 
-    print("JOB DESCRIPTION:", jd_words)
+        files = [f for f in os.listdir(resume_folder) if f.endswith(".pdf")]
 
-    for file in os.listdir(resume_folder):
+        if len(files) == 0:
+            return render_template(
+                "index.html",
+                error="No PDF resumes found inside resumes folder!",
+                job_description=job_desc
+            )
 
-        if file.endswith(".pdf"):
+        jd_words = set(job_desc.lower().split())
+
+        results = []
+        best_resume = None
+        best_score = -1
+
+        for file in files:
 
             path = os.path.join(resume_folder, file)
 
-            print("Reading:", file)
-
-            reader = PdfReader(path)
-
             text = ""
 
-            for page in reader.pages:
-                extracted = page.extract_text()
+            try:
+                reader = PdfReader(path)
 
-                if extracted:
-                    text += extracted
+                for page in reader.pages:
+                    page_text = page.extract_text()
 
-            print("TEXT LENGTH:", len(text))
+                    if page_text:
+                        text += page_text
 
-            text = text.lower()
+            except Exception as pdf_error:
+                print("PDF ERROR:", file, pdf_error)
+                continue
 
-            resume_words = set(text.split())
+            resume_words = set(text.lower().split())
 
-            common_words = jd_words.intersection(resume_words)
-
-            score = len(common_words)
-
-            print(file, "Score =", score)
+            score = len(jd_words.intersection(resume_words))
 
             results.append((file, score))
 
@@ -60,14 +81,20 @@ def analyze():
                 best_score = score
                 best_resume = file
 
-    print("BEST RESUME:", best_resume)
+        return render_template(
+            "index.html",
+            best_resume=best_resume,
+            best_score=best_score,
+            results=results,
+            job_description=job_desc
+        )
 
-    return render_template(
-        "index.html",
-        best_resume=best_resume,
-        best_score=best_score,
-        results=results
-    )
+    except Exception as e:
+        return render_template(
+            "index.html",
+            error=str(e),
+            job_description=""
+        )
 
 
 if __name__ == "__main__":
