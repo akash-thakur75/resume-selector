@@ -1,12 +1,8 @@
 from flask import Flask, render_template, request
 import os
 from PyPDF2 import PdfReader
-from sentence_transformers import SentenceTransformer, util
 
 app = Flask(__name__)
-
-model = SentenceTransformer('all-MiniLM-L6-v2')
-
 
 @app.route("/")
 def home():
@@ -16,9 +12,7 @@ def home():
 @app.route("/analyze", methods=["POST"])
 def analyze():
 
-    job_desc = request.form["job_description"]
-
-    jd_embedding = model.encode(job_desc, convert_to_tensor=True)
+    job_desc = request.form["job_description"].lower()
 
     resume_folder = "resumes"
 
@@ -26,21 +20,32 @@ def analyze():
     best_score = 0
     results = []
 
+    jd_words = set(job_desc.split())
+
     for file in os.listdir(resume_folder):
+
         if file.endswith(".pdf"):
 
             path = os.path.join(resume_folder, file)
+
             reader = PdfReader(path)
 
             text = ""
+
             for page in reader.pages:
-                text += page.extract_text()
+                extracted = page.extract_text()
+                if extracted:
+                    text += extracted
 
-            resume_embedding = model.encode(text, convert_to_tensor=True)
+            text = text.lower()
 
-            score = util.cos_sim(jd_embedding, resume_embedding).item()
+            resume_words = set(text.split())
 
-            results.append((file, round(score, 4)))
+            common_words = jd_words.intersection(resume_words)
+
+            score = len(common_words)
+
+            results.append((file, score))
 
             if score > best_score:
                 best_score = score
@@ -49,10 +54,11 @@ def analyze():
     return render_template(
         "index.html",
         best_resume=best_resume,
-        best_score=round(best_score, 4),
+        best_score=best_score,
         results=results
     )
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
