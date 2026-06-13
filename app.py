@@ -22,11 +22,15 @@ def analyze():
 
     jd_words = set(job_desc.split())
 
+    print("JOB DESCRIPTION:", jd_words)
+
     for file in os.listdir(resume_folder):
 
         if file.endswith(".pdf"):
 
             path = os.path.join(resume_folder, file)
+
+            print("Reading:", file)
 
             reader = PdfReader(path)
 
@@ -34,8 +38,11 @@ def analyze():
 
             for page in reader.pages:
                 extracted = page.extract_text()
+
                 if extracted:
                     text += extracted
+
+            print("TEXT LENGTH:", len(text))
 
             text = text.lower()
 
@@ -45,11 +52,15 @@ def analyze():
 
             score = len(common_words)
 
+            print(file, "Score =", score)
+
             results.append((file, score))
 
             if score > best_score:
                 best_score = score
                 best_resume = file
+
+    print("BEST RESUME:", best_resume)
 
     return render_template(
         "index.html",
